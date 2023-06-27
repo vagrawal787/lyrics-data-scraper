@@ -1,0 +1,4 @@
+**/
+*.csv
+*.cache
+*.DS_Store
