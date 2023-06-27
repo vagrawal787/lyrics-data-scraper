@@ -100,15 +100,14 @@ def addLyrics(input_fn, output_fn):
 
     names = song_df['Name']
     artists = song_df['Artist']
-    # print(artists)
-    # count_missing = 0
+
     def scrape_lyrics(artistname, songname, count_missing):
         artistname2 = unidecode(str(artistname.replace(' ','-')) if ' ' in artistname else str(artistname)).replace("'", "").replace(".", "").replace("&", "and").replace('$', "-").replace("?", "").replace("!", "")
-        # print(artistname2)
+
         songname_parenth = re.sub("[\(\[].*?[\)\]]", "", songname).strip()
-        # print(songname_parenth)
+
         songname2 = unidecode(str(songname_parenth.replace(' ','-')) if ' ' in songname_parenth else str(songname_parenth)).replace("'", "").replace("&", "and").replace('$', "-").replace("?", "").replace("!", "")
-        # print(songname2)
+
         page = requests.get('https://genius.com/'+ artistname2 + '-' + songname2 + '-' + 'lyrics')
         html = BeautifulSoup(page.text, 'html.parser')
         lyrics1 = html.find_all("div", class_="lyrics")
@@ -127,15 +126,15 @@ def addLyrics(input_fn, output_fn):
             # lyrics = lyrics2.get_text()
             clean_lyrics = re.sub(CLEANR, " ", lyrics)
             clean_lyrics = " ".join(clean_lyrics.split())
-            # print(clean_lyrics)
+
             lyrics = clean_lyrics
         elif lyrics1 == lyrics2 == None:
             lyrics = None
-            # print("no lyrics found", songname2, artistname2)
+
             count_missing += 1 
         if lyrics == None:
             count_missing += 1
-            # print("no lyrics found", songname2, artistname2)
+
         return lyrics, count_missing
 
     def lyrics_to_frame(df1):
@@ -158,7 +157,7 @@ def addLyrics(input_fn, output_fn):
 
 def cleanDataset(genres, input_fn, output_fn):
     read_df = pd.read_csv(input_fn)
-    # print(tabulate(read_df, headers='keys', tablefmt='psql'))
+
     read_df.dropna(axis='index', how='any', inplace=True)
     read_df.reset_index(inplace=True)
     read_df.drop('Unnamed: 0', axis = 1, inplace=True)
@@ -169,18 +168,18 @@ def cleanDataset(genres, input_fn, output_fn):
     df_lyrics = read_df['lyrics']
 
     for i in tqdm(range(len(df_genres))):
-        # print(df_genres[i])
+
         attributes = classifier(df_genres[i], candidate_labels=genres)
-        # print(attributes['scores'][0:3])
+
         numIndex = len([x for x in attributes['scores'] if x > 0.2])
         new_genres = attributes['labels'][0:numIndex]
-        # print(new_genres)
+
         new_row = {"Name": df_names[i], "lyrics": df_lyrics[i]}
         genre_map = {k: k in new_genres for k in genres}
-        # print(genre_map)
+
         new_row.update(genre_map)
 
-        # new_data.loc[len(new_data.index)] = [df_names[i], new_genres]
+
         new_data = pd.concat([new_data, pd.DataFrame([new_row])], ignore_index=True)
 
     print(tabulate(new_data.head(20), headers='keys', tablefmt='psql'))
@@ -211,79 +210,3 @@ def combineData(input_fn1, input_fn2, output_fn):
     
 
 main()
-
-
-#     artist = sp.artist(track["album"]["artists"][0]["uri"])
-#     genres = artist["genres"]
-#     print(genres)
-
-# ######## check if genres in recommendation genres ##########
-# # all = sp.recommendation_genre_seeds()['genres']
-# # print(all)
-# # for i in genres:
-# #     if i in all:
-# #         print(True)
-# #     else:
-# #         print(i, False)
-
-# ##########getting spotify metrics for all genres in list above##############
-# np.set_printoptions(suppress=True)
-
-# for genre in genres:
-#     print(genre)
-
-#     recs = sp.recommendations(seed_genres=[genre], limit =20)['tracks']
-#     # if(genre == 'soundtrack'):
-#     #     print(recs)
-#     dance_vals = []
-#     for i in recs:
-#         uri = i["uri"]
-#         allFeatures = sp.audio_features(uri)[0]
-#         wanted_keys = ['danceability', 'acousticness', 'instrumentalness', 'valence', 'speechiness']
-#         currDict = dict((k, allFeatures[k]) for k in wanted_keys if k in allFeatures)
-#         vals = list(currDict.values())
-#         dance_vals.append(vals)
-#         # print(i["name"])
-#         # print(currDict)
-#     np_vals = np.array(dance_vals)
-#     # print(np_vals)
-#     ranges = np.ptp(np_vals, axis=0)
-#     means = np.mean(np_vals, axis =0)
-#     medians = np.median(np_vals, axis=0)
-#     mins = np_vals.min(axis=0)
-#     maxes = np_vals.max(axis=0)
-#     for i in range(len(wanted_keys)):
-#         print(wanted_keys[i], ':', ranges[i], means[i], medians[i], mins[i], maxes[i])
-    # print('range', np.ptp(np_vals, axis=0))
-    # print('mean', np.mean(np_vals, axis =0))
-    # print('median', np.median(np_vals, axis=0))
-    # print('min', np_vals.min(axis=0))
-    # print('max', np_vals.max(axis=0))
-
-
-
-
-##############get spotify metrics for tracks in list#############
-# often = 'spotify:track:4PhsKqMdgMEUSstTDAmMpg'
-# sunday_morning = 'spotify:track:5qII2n90lVdPDcgXEEVHNy'
-# time_inception = 'spotify:track:6ZFbXIJkuI1dVNWvzJzown'
-# pulse = 'spotify:track:0QHZGpHLzjeYgcVARNpb29'
-# ilikeyou = 'spotify:track:0O6u0VJ46W86TxN9wgyqDj'
-# joji = 'spotify:track:7HJbpVOycx32pDjWvpF9hp'
-# get_you = 'spotify:track:7zFXmv6vqI4qOt4yGf3jYZ'
-# diary = 'spotify:track:5m9uiFH9sK5wxRZdfN62n9'
-# i_hate = 'spotify:track:0M955bMOoilikPXwKLYpoi'
-# riptide = 'spotify:track:3JvrhDOgAt6p7K8mDyZwRd'
-
-
-# uris = [often, sunday_morning, time_inception, pulse, ilikeyou, joji, get_you, diary, i_hate, riptide]
-# for i in uris:
-#     track = sp.track(i)
-#     artist = sp.artist(track["album"]["artists"][0]["uri"])
-#     genres = artist["genres"]
-#     print(genres)
-#     #allFeatures = sp.audio_features(i)[0]
-#     # wanted_keys = ['danceability', 'acousticness', 'instrumentalness', 'valence', 'speechiness']
-#     # currDict = dict((k, allFeatures[k]) for k in wanted_keys if k in allFeatures)
-#     # print(currDict)
-# print(track)
